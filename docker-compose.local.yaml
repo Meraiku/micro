@@ -3,8 +3,8 @@ services:
   user_service:
     container_name: usr-srv
     build:
-      context: ./user
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.user
     restart: always
     ports: 
       - 9000:9000
@@ -15,8 +15,8 @@ services:
   websocket_service:
     container_name: ws-srv 
     build:
-      context: ./websocket
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.ws
     restart: always
     ports: 
       - 2000:2000
