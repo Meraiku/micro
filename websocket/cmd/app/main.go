@@ -9,4 +9,6 @@ import (
 func main() {
 	godotenv.Load(".env")
 	fmt.Println("Init from Websocket")
+	for {
+	}
 }

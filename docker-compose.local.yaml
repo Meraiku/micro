@@ -9,7 +9,7 @@ services:
     ports: 
       - 9000:9000
     env_file:
-      - path: .env
+      - path: ./user/.env
         required: false
 
   websocket_service:
