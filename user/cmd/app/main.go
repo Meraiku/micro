@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -11,7 +12,9 @@ import (
 func main() {
 	godotenv.Load(".env")
 
-	app, err := app.New()
+	ctx := context.TODO()
+
+	app, err := app.New(ctx)
 	if err != nil {
 		log.Fatalf("failed to create app: %s", err)
 	}
