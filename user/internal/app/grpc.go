@@ -2,20 +2,47 @@ package app
 
 import (
 	"log"
+	"net"
 
 	"github.com/meraiku/micro/user/internal/config"
 	v1 "github.com/meraiku/micro/user/internal/controller/grpc/v1"
 	"github.com/meraiku/micro/user/internal/service/user"
+	"github.com/meraiku/micro/user/pkg/user_v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/reflection"
 )
 
 type grpcService struct {
+	grpcServer *grpc.Server
+
 	userRepo    user.Repository
 	userService v1.UserService
+	api         *v1.GRPCServer
 	cfg         *config.GRPC
 }
 
 func newGRPCService() *grpcService {
 	return &grpcService{}
+}
+
+func (s *grpcService) Run() error {
+	if s.grpcServer == nil {
+		s.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+
+		reflection.Register(s.grpcServer)
+
+		user_v1.RegisterUserV1Server(s.grpcServer, s.API())
+	}
+
+	listner, err := net.Listen("tcp", s.Config().Address())
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Starting GRPC service at %s", s.Config().Address())
+
+	return s.grpcServer.Serve(listner)
 }
 
 func (s *grpcService) Config() *config.GRPC {
@@ -45,4 +72,12 @@ func (s *grpcService) Service() v1.UserService {
 	}
 
 	return s.userService
+}
+
+func (s *grpcService) API() *v1.GRPCServer {
+	if s.api == nil {
+		s.api = v1.New(s.Service())
+	}
+
+	return s.api
 }

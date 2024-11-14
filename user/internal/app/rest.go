@@ -11,11 +11,19 @@ import (
 type restService struct {
 	userRepo    user.Repository
 	userService v1.UserService
+	api         *v1.API
 	cfg         *config.REST
 }
 
 func newRestService() *restService {
 	return &restService{}
+}
+
+func (s *restService) Run() error {
+
+	log.Printf("Starting RestAPI service at %s", s.Config().Address())
+
+	return s.API().Run(s.Config().Address())
 }
 
 func (s *restService) Config() *config.REST {
@@ -45,4 +53,12 @@ func (s *restService) Service() v1.UserService {
 	}
 
 	return s.userService
+}
+
+func (s *restService) API() *v1.API {
+	if s.api == nil {
+		s.api = v1.New(s.Service())
+	}
+
+	return s.api
 }

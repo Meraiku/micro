@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/uuid"
 	"github.com/meraiku/micro/user/internal/models"
 	"github.com/meraiku/micro/user/pkg/user_v1"
@@ -12,6 +13,8 @@ import (
 var (
 	ErrInvalidID = errors.New("invalid user id")
 )
+
+var _ user_v1.UserV1Server = (*GRPCServer)(nil)
 
 type UserService interface {
 	Get(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -49,7 +52,7 @@ func (s *GRPCServer) Get(ctx context.Context, req *user_v1.GetRequest) (*user_v1
 	return &user_v1.GetResponse{User: out}, nil
 }
 
-func (s *GRPCServer) List(ctx context.Context) (*user_v1.ListResponse, error) {
+func (s *GRPCServer) List(ctx context.Context, _ *empty.Empty) (*user_v1.ListResponse, error) {
 
 	users, err := s.userService.List(ctx)
 	if err != nil {
@@ -97,16 +100,16 @@ func (s *GRPCServer) Update(ctx context.Context, req *user_v1.UpdateRequest) (*u
 	return &user_v1.UpdateResponse{User: out}, nil
 }
 
-func (s *GRPCServer) Delete(ctx context.Context, req *user_v1.DeleteRequest) error {
+func (s *GRPCServer) Delete(ctx context.Context, req *user_v1.DeleteRequest) (*empty.Empty, error) {
 
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
-		return ErrInvalidID
+		return nil, ErrInvalidID
 	}
 
 	if err := s.userService.Delete(ctx, id); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &empty.Empty{}, nil
 }

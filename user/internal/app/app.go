@@ -4,13 +4,18 @@ import (
 	"context"
 	"os"
 
-	v1 "github.com/meraiku/micro/user/internal/controller/rest/v1"
+	"github.com/meraiku/micro/user/internal/config"
 	"github.com/meraiku/micro/user/internal/domain/user/memory"
 	"github.com/meraiku/micro/user/internal/service/user"
 )
 
+type API interface {
+	Run() error
+}
+
 type App struct {
 	userService *user.Service
+	api         API
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -26,7 +31,9 @@ func New(ctx context.Context) (*App, error) {
 func (a *App) initDeps(ctx context.Context) error {
 
 	deps := []func(ctx context.Context) error{
+		a.initConfig,
 		a.initUserService,
+		a.initAPI,
 	}
 
 	for _, dep := range deps {
@@ -38,7 +45,14 @@ func (a *App) initDeps(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) initUserService(ctx context.Context) error {
+func (a *App) initConfig(_ context.Context) error {
+
+	config.Load()
+
+	return nil
+}
+
+func (a *App) initUserService(_ context.Context) error {
 	var repo user.Repository
 
 	switch os.Getenv("USER_REPO") {
@@ -51,24 +65,25 @@ func (a *App) initUserService(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) Run() error {
+func (a *App) initAPI(_ context.Context) error {
 
 	transport := os.Getenv("API")
+	if transport == "" {
+		transport = "REST"
+	}
 
 	switch transport {
 	case "REST":
-		return a.runRestAPI()
+		a.api = newRestService()
 	case "GRPC":
-		return nil
-	default:
-		return a.runRestAPI()
+		a.api = newGRPCService()
 	}
 
+	return nil
 }
 
-func (a *App) runRestAPI() error {
-	api := v1.New(a.userService)
-	return api.Run()
+func (a *App) Run() error {
+	return a.api.Run()
 }
 
 func setupUserRepository(repoType string) user.Repository {

@@ -1,7 +1,7 @@
 services:
 
-  user_service:
-    container_name: usr-srv
+  user_service_rest:
+    container_name: usr-srv-rest
     build:
       context: .
       dockerfile: Dockerfile.user
@@ -11,6 +11,17 @@ services:
     env_file:
       - path: ./user/.env
         required: false
+
+  user_service_grpc:
+    container_name: usr-srv-grpc
+    build:
+      context: .
+      dockerfile: Dockerfile.user
+    restart: always
+    ports: 
+      - 20001:20001
+    environment:
+      API: "GRPC"
 
   websocket_service:
     container_name: ws-srv 

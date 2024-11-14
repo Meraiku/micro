@@ -3,9 +3,8 @@ package v1
 import (
 	"context"
 	"errors"
-	"net"
 	"net/http"
-	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/meraiku/micro/user/internal/models"
@@ -31,26 +30,21 @@ type API struct {
 }
 
 func New(
-	us UserService,
+	userService UserService,
 ) *API {
 	return &API{
-		userService: us,
+		userService: userService,
 	}
 }
 
-func (api *API) Run() error {
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	host := os.Getenv("HOST")
-
-	addr := net.JoinHostPort(host, port)
+func (api *API) Run(addr string) error {
 
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: api.routes(),
+		Addr:         addr,
+		Handler:      api.routes(),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	return srv.ListenAndServe()
