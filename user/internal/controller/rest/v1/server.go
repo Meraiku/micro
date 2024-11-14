@@ -21,8 +21,8 @@ var (
 type UserService interface {
 	Get(ctx context.Context, id uuid.UUID) (*models.User, error)
 	List(ctx context.Context) ([]*models.User, error)
-	Create(ctx context.Context, user *models.User) error
-	Update(ctx context.Context, user *models.User) error
+	Create(ctx context.Context, user *models.User) (*models.User, error)
+	Update(ctx context.Context, user *models.User) (*models.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 

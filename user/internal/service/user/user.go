@@ -10,8 +10,8 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id uuid.UUID) (*models.User, error)
 	List(ctx context.Context) ([]*models.User, error)
-	Create(ctx context.Context, user *models.User) error
-	Update(ctx context.Context, user *models.User) error
+	Create(ctx context.Context, user *models.User) (*models.User, error)
+	Update(ctx context.Context, user *models.User) (*models.User, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -47,22 +47,24 @@ func (s *Service) List(ctx context.Context) ([]*models.User, error) {
 	return users, nil
 }
 
-func (s *Service) Create(ctx context.Context, user *models.User) error {
+func (s *Service) Create(ctx context.Context, user *models.User) (*models.User, error) {
 
-	if err := s.repo.Create(ctx, user); err != nil {
-		return err
+	out, err := s.repo.Create(ctx, user)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return out, nil
 }
 
-func (s *Service) Update(ctx context.Context, user *models.User) error {
+func (s *Service) Update(ctx context.Context, user *models.User) (*models.User, error) {
 
-	if err := s.repo.Update(ctx, user); err != nil {
-		return err
+	out, err := s.repo.Update(ctx, user)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	return out, nil
 }
 
 func (s *Service) Delete(ctx context.Context, id uuid.UUID) error {

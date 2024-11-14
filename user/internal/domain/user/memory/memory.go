@@ -45,30 +45,30 @@ func (r *Repository) List(ctx context.Context) ([]*models.User, error) {
 	return users, nil
 }
 
-func (r *Repository) Create(ctx context.Context, user *models.User) error {
+func (r *Repository) Create(ctx context.Context, user *models.User) (*models.User, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if _, ok := r.store[user.ID]; ok {
-		return user_repo.ErrUserExists
+		return nil, user_repo.ErrUserExists
 	}
 
 	r.store[user.ID] = user
 
-	return nil
+	return user, nil
 }
 
-func (r *Repository) Update(ctx context.Context, user *models.User) error {
+func (r *Repository) Update(ctx context.Context, user *models.User) (*models.User, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if _, ok := r.store[user.ID]; !ok {
-		return user_repo.ErrUserNotFound
+		return nil, user_repo.ErrUserNotFound
 	}
 
 	r.store[user.ID] = user
 
-	return nil
+	return user, nil
 }
 
 func (r *Repository) Delete(ctx context.Context, id uuid.UUID) error {

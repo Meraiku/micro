@@ -52,14 +52,12 @@ func (api *API) CreateUser(w http.ResponseWriter, r *http.Request) error {
 		return NewAPIError(http.StatusBadRequest, fmt.Errorf("invalid user data: %s", err))
 	}
 
-	err = api.userService.Create(r.Context(), user)
+	out, err := api.userService.Create(r.Context(), user)
 	if err != nil {
 		return err
 	}
 
-	w.WriteHeader(http.StatusCreated)
-
-	return nil
+	return api.JSON(w, http.StatusCreated, ToUserResponse(out))
 }
 
 func (api *API) UpdateUser(w http.ResponseWriter, r *http.Request) error {
@@ -83,12 +81,12 @@ func (api *API) UpdateUser(w http.ResponseWriter, r *http.Request) error {
 
 	user.ID = id
 
-	err = api.userService.Update(r.Context(), user)
+	out, err := api.userService.Update(r.Context(), user)
 	if err != nil {
 		return err
 	}
 
-	return api.JSON(w, http.StatusOK, ToUserResponse(user))
+	return api.JSON(w, http.StatusOK, ToUserResponse(out))
 }
 
 func (api *API) DeleteUser(w http.ResponseWriter, r *http.Request) error {
