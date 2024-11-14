@@ -70,3 +70,15 @@ func (a *App) runRestAPI() error {
 	api := v1.New(a.userService)
 	return api.Run()
 }
+
+func setupUserRepository(repoType string) user.Repository {
+	var repo user.Repository
+
+	switch repoType {
+	default:
+		memoryRepo := memory.New()
+		repo = memoryRepo
+	}
+
+	return repo
+}
