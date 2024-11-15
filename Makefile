@@ -8,3 +8,5 @@ build_ws:
 docker:
 	@docker compose -f docker-compose.local.yaml up --build
 
+stop:
+	@docker compose -f docker-compose.local.yaml stop
