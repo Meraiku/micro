@@ -10,6 +10,14 @@ const (
 )
 
 type (
-	Logger = slog.Logger
-	Level  = slog.Level
+	Logger         = slog.Logger
+	Level          = slog.Level
+	Handler        = slog.Handler
+	HandlerOptions = slog.HandlerOptions
+)
+
+var (
+	New            = slog.New
+	NewTextHandler = slog.NewTextHandler
+	NewJSONHandler = slog.NewJSONHandler
 )
