@@ -20,4 +20,6 @@ var (
 	New            = slog.New
 	NewTextHandler = slog.NewTextHandler
 	NewJSONHandler = slog.NewJSONHandler
+	Default        = slog.Default
+	SetDefault     = slog.SetDefault
 )

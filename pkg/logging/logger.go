@@ -3,17 +3,19 @@ package logging
 import "os"
 
 const (
-	defaultLevel     = LevelInfo
-	defaultIsJSON    = true
-	defaultAddSource = true
-	defaultLogstash  = false
+	defaultLevel      = LevelInfo
+	defaultIsJSON     = true
+	defaultAddSource  = true
+	defaultSetDefault = true
+	defaultLogstash   = false
 )
 
 func NewLogger(opts ...LoggerOption) *Logger {
 	cfg := LoggerOptions{
-		Level:     defaultLevel,
-		IsJSON:    defaultIsJSON,
-		AddSource: defaultAddSource,
+		Level:      defaultLevel,
+		IsJSON:     defaultIsJSON,
+		AddSource:  defaultAddSource,
+		SetDefault: defaultSetDefault,
 		Logstash: Logstash{
 			Enable: defaultLogstash,
 		},
@@ -39,14 +41,19 @@ func NewLogger(opts ...LoggerOption) *Logger {
 
 	l := New(h)
 
+	if cfg.SetDefault {
+		SetDefault(l)
+	}
+
 	return l
 }
 
 type LoggerOptions struct {
-	Level     Level
-	IsJSON    bool
-	AddSource bool
-	Logstash  Logstash
+	Level      Level
+	IsJSON     bool
+	AddSource  bool
+	SetDefault bool
+	Logstash   Logstash
 }
 
 type Logstash struct {
@@ -77,6 +84,12 @@ func WithJSON(isJSON bool) LoggerOption {
 func WithSource(addSource bool) LoggerOption {
 	return func(o *LoggerOptions) {
 		o.AddSource = addSource
+	}
+}
+
+func WithSetDefault(setDefault bool) LoggerOption {
+	return func(o *LoggerOptions) {
+		o.SetDefault = setDefault
 	}
 }
 
