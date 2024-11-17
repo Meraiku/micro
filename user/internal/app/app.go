@@ -11,7 +11,7 @@ import (
 )
 
 type API interface {
-	Run() error
+	Run(ctx context.Context) error
 }
 
 type App struct {
@@ -66,7 +66,7 @@ func (a *App) initConfig(_ context.Context) error {
 	return nil
 }
 
-func (a *App) initUserService(_ context.Context) error {
+func (a *App) initUserService(ctx context.Context) error {
 	var repo user.Repository
 
 	repoEnv := os.Getenv("USER_REPO")
@@ -80,15 +80,16 @@ func (a *App) initUserService(_ context.Context) error {
 		repo = memoryRepo
 	}
 
-	logging.Default().Info("user service initialized",
-		logging.StringAttr("repo", repoEnv),
+	logging.L(ctx).Info(
+		"user service initialized",
+		logging.String("repo", repoEnv),
 	)
 
 	a.userService = user.New(repo)
 	return nil
 }
 
-func (a *App) initAPI(_ context.Context) error {
+func (a *App) initAPI(ctx context.Context) error {
 
 	transport := os.Getenv("API")
 	if transport == "" {
@@ -102,15 +103,16 @@ func (a *App) initAPI(_ context.Context) error {
 		a.api = newGRPCService()
 	}
 
-	logging.Default().Info("api initialized",
-		logging.StringAttr("transport", transport),
+	logging.L(ctx).Info(
+		"api initialized",
+		logging.String("transport", transport),
 	)
 
 	return nil
 }
 
-func (a *App) Run() error {
-	return a.api.Run()
+func (a *App) Run(ctx context.Context) error {
+	return a.api.Run(ctx)
 }
 
 func setupUserRepository(repoType string) user.Repository {

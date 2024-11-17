@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"log"
 	"net"
 
@@ -27,8 +28,13 @@ func newGRPCService() *grpcService {
 	return &grpcService{}
 }
 
-func (s *grpcService) Run() error {
+func (s *grpcService) Run(ctx context.Context) error {
+	log := logging.L(ctx)
+
 	if s.grpcServer == nil {
+
+		log.Debug("initializing grpc server")
+
 		s.grpcServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 
 		reflection.Register(s.grpcServer)
@@ -41,9 +47,9 @@ func (s *grpcService) Run() error {
 		return err
 	}
 
-	logging.Default().Info(
+	log.Info(
 		"grpc service initialized",
-		logging.StringAttr("address", listner.Addr().String()),
+		logging.String("address", listner.Addr().String()),
 	)
 
 	return s.grpcServer.Serve(listner)

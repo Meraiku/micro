@@ -12,7 +12,7 @@ func (api *API) routes() *chi.Mux {
 
 	r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
+	r.Use(loggingMiddleware)
 	r.Use(middleware.Recoverer)
 
 	r.Route("/api", func(r chi.Router) {

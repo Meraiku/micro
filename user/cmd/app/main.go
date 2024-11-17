@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("failed to create app: %s", err)
 	}
 
-	if err := app.Run(); err != nil {
+	if err := app.Run(ctx); err != nil {
 		log.Fatalf("failed to start app: %s", err)
 	}
 }
