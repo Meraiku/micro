@@ -3,6 +3,7 @@ package app
 import (
 	"log"
 
+	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/internal/config"
 	v1 "github.com/meraiku/micro/user/internal/controller/rest/v1"
 	"github.com/meraiku/micro/user/internal/service/user"
@@ -21,7 +22,10 @@ func newRestService() *restService {
 
 func (s *restService) Run() error {
 
-	log.Printf("Starting RestAPI service at %s", s.Config().Address())
+	logging.Default().Info(
+		"Starting RestAPI service",
+		logging.StringAttr("address", s.Config().Address()),
+	)
 
 	return s.API().Run(s.Config().Address())
 }

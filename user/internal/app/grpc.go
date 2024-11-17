@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/internal/config"
 	v1 "github.com/meraiku/micro/user/internal/controller/grpc/v1"
 	"github.com/meraiku/micro/user/internal/service/user"
@@ -40,7 +41,10 @@ func (s *grpcService) Run() error {
 		return err
 	}
 
-	log.Printf("Starting GRPC service at %s", s.Config().Address())
+	logging.Default().Info(
+		"grpc service initialized",
+		logging.StringAttr("address", listner.Addr().String()),
+	)
 
 	return s.grpcServer.Serve(listner)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/internal/config"
 	"github.com/meraiku/micro/user/internal/domain/user/memory"
 	"github.com/meraiku/micro/user/internal/service/user"
@@ -31,6 +32,7 @@ func New(ctx context.Context) (*App, error) {
 func (a *App) initDeps(ctx context.Context) error {
 
 	deps := []func(ctx context.Context) error{
+		a.initLogger,
 		a.initConfig,
 		a.initUserService,
 		a.initAPI,
@@ -45,6 +47,18 @@ func (a *App) initDeps(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initLogger(_ context.Context) error {
+
+	log := logging.NewLogger(
+		logging.WithLevel(logging.LevelDebug),
+		logging.WithSource(false),
+	)
+
+	log.Info("logger initialized")
+
+	return nil
+}
+
 func (a *App) initConfig(_ context.Context) error {
 
 	config.Load()
@@ -55,11 +69,20 @@ func (a *App) initConfig(_ context.Context) error {
 func (a *App) initUserService(_ context.Context) error {
 	var repo user.Repository
 
-	switch os.Getenv("USER_REPO") {
-	default:
+	repoEnv := os.Getenv("USER_REPO")
+	if repoEnv == "" {
+		repoEnv = "memory"
+	}
+
+	switch repoEnv {
+	case "memory":
 		memoryRepo := memory.New()
 		repo = memoryRepo
 	}
+
+	logging.Default().Info("user service initialized",
+		logging.StringAttr("repo", repoEnv),
+	)
 
 	a.userService = user.New(repo)
 	return nil
@@ -78,6 +101,10 @@ func (a *App) initAPI(_ context.Context) error {
 	case "GRPC":
 		a.api = newGRPCService()
 	}
+
+	logging.Default().Info("api initialized",
+		logging.StringAttr("transport", transport),
+	)
 
 	return nil
 }
