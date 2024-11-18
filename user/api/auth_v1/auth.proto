@@ -1,4 +1,5 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
 
 package auth_v1;
 
@@ -8,7 +9,7 @@ option go_package = "github.com/meraiku/micro/user/api/auth_v1;auth_v1";
 service AuthV1 {
   rpc Login (LoginRequest) returns (Tokens);
   rpc Register (RegisterRequest) returns (RegisterResponse);
-  rpc Authenticate (AuthenticateRequest) returns (Tokens);
+  rpc Authenticate (AuthenticateRequest) returns (google.protobuf.Empty);
   rpc Refresh (RefreshRequest) returns (Tokens);
 }
 

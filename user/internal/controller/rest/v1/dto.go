@@ -11,15 +11,17 @@ type UserResponse struct {
 }
 
 type CreateUserRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 type UpdateUserRequest struct {
-	Name string `json:"name"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
 }
 
 func (req *CreateUserRequest) ToUser() (*models.User, error) {
-	user, err := models.NewUser(req.Name)
+	user, err := models.NewUser(req.Name, req.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +29,7 @@ func (req *CreateUserRequest) ToUser() (*models.User, error) {
 }
 
 func (req *UpdateUserRequest) ToUser() (*models.User, error) {
-	user, err := models.NewUser(req.Name)
+	user, err := models.NewUser(req.Name, req.Password)
 	if err != nil {
 		return nil, err
 	}

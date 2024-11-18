@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/meraiku/micro/user/internal/domain/auth"
 	"github.com/meraiku/micro/user/internal/models"
+	"github.com/meraiku/micro/user/internal/service/auth"
 )
 
 type Repository struct {

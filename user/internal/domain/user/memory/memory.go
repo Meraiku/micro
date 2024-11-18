@@ -21,7 +21,7 @@ func New() *Repository {
 	}
 }
 
-func (r *Repository) Get(ctx context.Context, id uuid.UUID) (*models.User, error) {
+func (r *Repository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

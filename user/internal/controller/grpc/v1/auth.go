@@ -5,28 +5,29 @@ import (
 
 	"github.com/meraiku/micro/user/internal/models"
 	"github.com/meraiku/micro/user/pkg/auth_v1"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type AuthService interface {
 	Login(ctx context.Context, user *models.User) (*models.Tokens, error)
 	Register(ctx context.Context, user *models.User) (*models.User, error)
-	Authenticate(ctx context.Context, accessToken string) (*models.Tokens, error)
+	Authenticate(ctx context.Context, accessToken string) error
 	Refresh(ctx context.Context, refreshToken string) (*models.Tokens, error)
 }
 
-type GRPCAuthServer struct {
+type GRPCAuthService struct {
 	auth_v1.UnimplementedAuthV1Server
 
 	authService AuthService
 }
 
-func NewAuthServer(authService AuthService) *GRPCAuthServer {
-	return &GRPCAuthServer{
+func NewAuthService(authService AuthService) *GRPCAuthService {
+	return &GRPCAuthService{
 		authService: authService,
 	}
 }
 
-func (s *GRPCAuthServer) Login(ctx context.Context, req *auth_v1.LoginRequest) (*auth_v1.Tokens, error) {
+func (s *GRPCAuthService) Login(ctx context.Context, req *auth_v1.LoginRequest) (*auth_v1.Tokens, error) {
 
 	user, err := models.NewUser(req.Username, req.Password)
 	if err != nil {
@@ -41,7 +42,7 @@ func (s *GRPCAuthServer) Login(ctx context.Context, req *auth_v1.LoginRequest) (
 	return FromTokens(tokens), nil
 }
 
-func (s *GRPCAuthServer) Register(ctx context.Context, req *auth_v1.RegisterRequest) (*auth_v1.RegisterResponse, error) {
+func (s *GRPCAuthService) Register(ctx context.Context, req *auth_v1.RegisterRequest) (*auth_v1.RegisterResponse, error) {
 
 	user, err := models.NewUser(req.Username, req.Password)
 	if err != nil {
@@ -61,19 +62,19 @@ func (s *GRPCAuthServer) Register(ctx context.Context, req *auth_v1.RegisterRequ
 	return out, nil
 }
 
-func (s *GRPCAuthServer) Authenticate(ctx context.Context, req *auth_v1.AuthenticateRequest) (*auth_v1.Tokens, error) {
+func (s *GRPCAuthService) Authenticate(ctx context.Context, req *auth_v1.AuthenticateRequest) (*emptypb.Empty, error) {
 
 	accessToken := req.AccessToken
 
-	tokens, err := s.authService.Authenticate(ctx, accessToken)
+	err := s.authService.Authenticate(ctx, accessToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return FromTokens(tokens), nil
+	return &emptypb.Empty{}, nil
 }
 
-func (s *GRPCAuthServer) Refresh(ctx context.Context, req *auth_v1.RefreshRequest) (*auth_v1.Tokens, error) {
+func (s *GRPCAuthService) Refresh(ctx context.Context, req *auth_v1.RefreshRequest) (*auth_v1.Tokens, error) {
 
 	refreshToken := req.RefreshToken
 

@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	Get(ctx context.Context, id uuid.UUID) (*models.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	List(ctx context.Context) ([]*models.User, error)
 	Create(ctx context.Context, user *models.User) (*models.User, error)
 	Update(ctx context.Context, user *models.User) (*models.User, error)
@@ -29,7 +29,7 @@ func New(
 
 func (s *Service) Get(ctx context.Context, id uuid.UUID) (*models.User, error) {
 
-	user, err := s.repo.Get(ctx, id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
