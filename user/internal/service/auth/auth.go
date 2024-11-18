@@ -24,6 +24,7 @@ var (
 var (
 	ErrIncorrectPassword = errors.New("incorrect password")
 	ErrInvalidTokens     = errors.New("invalid tokens")
+	ErrNoTokens          = errors.New("no tokens")
 )
 
 type UserRepository interface {
@@ -130,7 +131,7 @@ func (s *Service) Authenticate(ctx context.Context, t *models.Tokens) (*models.U
 
 	repoTokens, err := s.tokenRepo.GetTokens(ctx, userID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get tokens: %w", err)
+		return nil, ErrNoTokens
 	}
 
 	log.Debug(
@@ -161,5 +162,62 @@ func (s *Service) Authenticate(ctx context.Context, t *models.Tokens) (*models.U
 }
 
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (*models.Tokens, error) {
-	return nil, nil
+	log := logging.L(ctx)
+
+	log.Debug(
+		"parsing refresh token",
+		logging.String("token", refreshToken),
+	)
+
+	claims, err := tokens.ParseJWT(refreshToken, s.refreshSecret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse refresh token: %w", err)
+	}
+
+	userID := claims.ID
+
+	log.Debug(
+		"get tokens from repo",
+		logging.String("user_id", userID),
+	)
+
+	repoTokens, err := s.tokenRepo.GetTokens(ctx, userID)
+	if err != nil {
+		return nil, ErrNoTokens
+	}
+
+	log.Debug(
+		"tokens from repo",
+		logging.String("access_token", repoTokens.AccessToken),
+		logging.String("refresh_token", repoTokens.RefreshToken),
+	)
+
+	if repoTokens.RefreshToken != refreshToken {
+		return nil, ErrInvalidTokens
+	}
+
+	log.Debug(
+		"generate new tokens",
+	)
+
+	tokens, err := tokens.GeneratePair(
+		userID,
+		s.accessTTL,
+		s.refreshTTL,
+		s.accessSecret,
+		s.refreshSecret,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate tokens: %w", err)
+	}
+
+	log.Debug(
+		"stash new tokens",
+	)
+
+	if err := s.tokenRepo.StashTokens(ctx, tokens); err != nil {
+		return nil, fmt.Errorf("failed to stash tokens: %w", err)
+	}
+
+	return tokens, nil
 }
