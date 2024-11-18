@@ -3,6 +3,7 @@ package v1
 import (
 	"github.com/google/uuid"
 	"github.com/meraiku/micro/user/internal/models"
+	"github.com/meraiku/micro/user/pkg/auth_v1"
 	"github.com/meraiku/micro/user/pkg/user_v1"
 )
 
@@ -24,4 +25,18 @@ func ToEntity(user *user_v1.User) (*models.User, error) {
 		ID:   id,
 		Name: user.Info.Name,
 	}, nil
+}
+
+func FromTokens(tokens *models.Tokens) *auth_v1.Tokens {
+	return &auth_v1.Tokens{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}
+}
+
+func ToTokens(tokens *auth_v1.Tokens) *models.Tokens {
+	return &models.Tokens{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+	}
 }
