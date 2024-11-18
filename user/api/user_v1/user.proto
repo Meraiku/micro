@@ -3,7 +3,7 @@ import "google/protobuf/empty.proto";
 
 package user_v1;
 
-option go_package = "github.com/meraiku/golang/micro/user/api/user_v1;user_v1"; 
+option go_package = "github.com/meraiku/micro/user/api/user_v1;user_v1"; 
 
 service UserV1 {
   rpc List (google.protobuf.Empty) returns (ListResponse); 

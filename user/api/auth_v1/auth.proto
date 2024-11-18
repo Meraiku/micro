@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package auth_v1;
+
+
+option go_package = "github.com/meraiku/micro/user/api/auth_v1;auth_v1"; 
+
+service AuthV1 {
+  rpc Login (LoginRequest) returns (Tokens);
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  rpc Authenticate (AuthenticateRequest) returns (Tokens);
+  rpc Refresh (RefreshRequest) returns (Tokens);
+}
+
+message Tokens {
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+  string id = 1;
+  string username = 2;
+}
+
+message AuthenticateRequest {
+  string accessToken = 1;
+}
+
+message RefreshRequest {
+  string refreshToken = 1;
+}
+
