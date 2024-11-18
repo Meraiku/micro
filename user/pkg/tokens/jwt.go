@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/meraiku/micro/user/internal/models"
 )
 
 var (
@@ -23,7 +24,8 @@ func GenerateJWT(
 	ttl time.Duration,
 	secret []byte,
 ) (string, error) {
-	if secret == "" {
+
+	if len(secret) == 0 {
 		return "", ErrNoSecret
 	}
 
@@ -35,7 +37,7 @@ func GenerateJWT(
 		},
 	}
 
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodRS256, c)
 
 	token, err := jwtToken.SignedString(secret)
 	if err != nil {
@@ -43,6 +45,27 @@ func GenerateJWT(
 	}
 
 	return token, nil
+}
+
+func GeneratePair(
+	id string,
+	accessTTL time.Duration,
+	refreshTTL time.Duration,
+	accessSecret []byte,
+	refreshSecret []byte,
+) (*models.Tokens, error) {
+
+	access, err := GenerateJWT(id, accessTTL, accessSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	refresh, err := GenerateJWT(id, refreshTTL, refreshSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return models.NewTokens(access, refresh)
 }
 
 func ParseJWT(tokenStr string, secret []byte) (*Claims, error) {
