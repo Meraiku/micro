@@ -8,8 +8,6 @@ import (
 	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/internal/config"
 	"github.com/meraiku/micro/user/internal/containers"
-	v1 "github.com/meraiku/micro/user/internal/controller/grpc/v1"
-	"github.com/meraiku/micro/user/internal/service/user"
 	"github.com/meraiku/micro/user/pkg/auth_v1"
 	"github.com/meraiku/micro/user/pkg/user_v1"
 	"google.golang.org/grpc"
@@ -20,10 +18,8 @@ import (
 type grpcService struct {
 	grpcServer *grpc.Server
 
-	userRepo      user.Repository
-	userService   v1.UserService
 	authContainer *containers.AuthContainerGRPC
-	api           *v1.GRPCServer
+	userContainer *containers.UserContainerGRPC
 	cfg           *config.GRPC
 }
 
@@ -42,7 +38,7 @@ func (s *grpcService) Run(ctx context.Context) error {
 
 		reflection.Register(s.grpcServer)
 
-		user_v1.RegisterUserV1Server(s.grpcServer, s.API())
+		user_v1.RegisterUserV1Server(s.grpcServer, s.UserContainer().UserAPI)
 		auth_v1.RegisterAuthV1Server(s.grpcServer, s.AuthContainer().AuthAPI)
 	}
 
@@ -72,22 +68,6 @@ func (s *grpcService) Config() *config.GRPC {
 	return s.cfg
 }
 
-func (s *grpcService) Repo() user.Repository {
-	if s.userRepo == nil {
-		s.userRepo = setupUserRepository(s.Config().UserRepoType())
-	}
-
-	return s.userRepo
-}
-
-func (s *grpcService) UserService() v1.UserService {
-	if s.userService == nil {
-		s.userService = user.New(s.Repo())
-	}
-
-	return s.userService
-}
-
 func (s *grpcService) AuthContainer() *containers.AuthContainerGRPC {
 	if s.authContainer == nil {
 		var err error
@@ -101,10 +81,15 @@ func (s *grpcService) AuthContainer() *containers.AuthContainerGRPC {
 	return s.authContainer
 }
 
-func (s *grpcService) API() *v1.GRPCServer {
-	if s.api == nil {
-		s.api = v1.New(s.UserService())
+func (s *grpcService) UserContainer() *containers.UserContainerGRPC {
+	if s.userContainer == nil {
+		var err error
+
+		s.userContainer, err = containers.NewUserGRPC()
+		if err != nil {
+			log.Fatalf("failed to create user container: %v", err)
+		}
 	}
 
-	return s.api
+	return s.userContainer
 }

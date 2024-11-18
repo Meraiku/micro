@@ -14,7 +14,7 @@ var (
 	ErrInvalidID = errors.New("invalid user id")
 )
 
-var _ user_v1.UserV1Server = (*GRPCServer)(nil)
+var _ user_v1.UserV1Server = (*GRPCUserService)(nil)
 
 type UserService interface {
 	Get(ctx context.Context, id uuid.UUID) (*models.User, error)
@@ -24,18 +24,18 @@ type UserService interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
-type GRPCServer struct {
+type GRPCUserService struct {
 	user_v1.UnimplementedUserV1Server
 	userService UserService
 }
 
-func New(userService UserService) *GRPCServer {
-	return &GRPCServer{
+func NewUserService(userService UserService) *GRPCUserService {
+	return &GRPCUserService{
 		userService: userService,
 	}
 }
 
-func (s *GRPCServer) Get(ctx context.Context, req *user_v1.GetRequest) (*user_v1.GetResponse, error) {
+func (s *GRPCUserService) Get(ctx context.Context, req *user_v1.GetRequest) (*user_v1.GetResponse, error) {
 
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
@@ -52,7 +52,7 @@ func (s *GRPCServer) Get(ctx context.Context, req *user_v1.GetRequest) (*user_v1
 	return &user_v1.GetResponse{User: out}, nil
 }
 
-func (s *GRPCServer) List(ctx context.Context, _ *empty.Empty) (*user_v1.ListResponse, error) {
+func (s *GRPCUserService) List(ctx context.Context, _ *empty.Empty) (*user_v1.ListResponse, error) {
 
 	users, err := s.userService.List(ctx)
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *GRPCServer) List(ctx context.Context, _ *empty.Empty) (*user_v1.ListRes
 	return &user_v1.ListResponse{Users: out}, nil
 }
 
-func (s *GRPCServer) Create(ctx context.Context, req *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
+func (s *GRPCUserService) Create(ctx context.Context, req *user_v1.CreateRequest) (*user_v1.CreateResponse, error) {
 
 	userInput := &models.User{
 		Name: req.Info.Name,
@@ -83,7 +83,7 @@ func (s *GRPCServer) Create(ctx context.Context, req *user_v1.CreateRequest) (*u
 	return &user_v1.CreateResponse{User: out}, nil
 }
 
-func (s *GRPCServer) Update(ctx context.Context, req *user_v1.UpdateRequest) (*user_v1.UpdateResponse, error) {
+func (s *GRPCUserService) Update(ctx context.Context, req *user_v1.UpdateRequest) (*user_v1.UpdateResponse, error) {
 
 	userInput, err := ToEntity(req.User)
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *GRPCServer) Update(ctx context.Context, req *user_v1.UpdateRequest) (*u
 	return &user_v1.UpdateResponse{User: out}, nil
 }
 
-func (s *GRPCServer) Delete(ctx context.Context, req *user_v1.DeleteRequest) (*empty.Empty, error) {
+func (s *GRPCUserService) Delete(ctx context.Context, req *user_v1.DeleteRequest) (*empty.Empty, error) {
 
 	id, err := uuid.Parse(req.Id)
 	if err != nil {
