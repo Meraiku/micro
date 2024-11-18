@@ -28,12 +28,12 @@ var (
 )
 
 type UserRepository interface {
-	GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error)
-	CreateUser(ctx context.Context, user *models.User) (*models.User, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
+	Create(ctx context.Context, user *models.User) (*models.User, error)
 }
 
 type TokenRepository interface {
-	StashTokens(ctx context.Context, tokens *models.Tokens) error
+	StashTokens(ctx context.Context, userID string, tokens *models.Tokens) error
 	GetTokens(ctx context.Context, userID string) (*models.Tokens, error)
 }
 
@@ -64,7 +64,7 @@ func New(
 
 func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens, error) {
 
-	u, err := s.userRepo.GetUserByID(ctx, user.ID)
+	u, err := s.userRepo.GetByID(ctx, user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -84,7 +84,7 @@ func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens,
 		return nil, fmt.Errorf("failed to generate tokens: %w", err)
 	}
 
-	if err := s.tokenRepo.StashTokens(ctx, tokens); err != nil {
+	if err := s.tokenRepo.StashTokens(ctx, user.ID.String(), tokens); err != nil {
 		return nil, fmt.Errorf("failed to stash tokens: %w", err)
 	}
 
@@ -97,7 +97,7 @@ func (s *Service) Register(ctx context.Context, user *models.User) (*models.User
 		return nil, err
 	}
 
-	u, err := s.userRepo.CreateUser(ctx, user)
+	u, err := s.userRepo.Create(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -153,7 +153,7 @@ func (s *Service) Authenticate(ctx context.Context, t *models.Tokens) (*models.U
 		logging.String("user_id", userID),
 	)
 
-	user, err := s.userRepo.GetUserByID(ctx, uuid.MustParse(userID))
+	user, err := s.userRepo.GetByID(ctx, uuid.MustParse(userID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -215,7 +215,7 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*models.Tok
 		"stash new tokens",
 	)
 
-	if err := s.tokenRepo.StashTokens(ctx, tokens); err != nil {
+	if err := s.tokenRepo.StashTokens(ctx, userID, tokens); err != nil {
 		return nil, fmt.Errorf("failed to stash tokens: %w", err)
 	}
 
