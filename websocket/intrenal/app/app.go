@@ -14,7 +14,7 @@ func New(ctx context.Context) *App {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	chatService := v1.NewChatServiceAPI(":8080")
+	chatService := v1.NewChatServiceAPI(":2000")
 
 	return chatService.Run(ctx)
 }

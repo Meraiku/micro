@@ -8,9 +8,9 @@ services:
     restart: always
     ports: 
       - 9000:9000
-    env_file:
-      - path: ./user/.env
-        required: false
+    environment:
+      PORT: 9000
+      API: "REST"
 
   user_service_grpc:
     container_name: usr-srv-grpc
@@ -21,6 +21,7 @@ services:
     ports: 
       - 20001:20001
     environment:
+      PORT: 20001
       API: "GRPC"
 
   websocket_service:
