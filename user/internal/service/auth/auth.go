@@ -30,6 +30,7 @@ var (
 type UserRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	Create(ctx context.Context, user *models.User) (*models.User, error)
+	GetByUsername(ctx context.Context, name string) (*models.User, error)
 }
 
 type TokenRepository interface {
@@ -64,7 +65,7 @@ func New(
 
 func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens, error) {
 
-	u, err := s.userRepo.GetByID(ctx, user.ID)
+	u, err := s.userRepo.GetByUsername(ctx, user.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}

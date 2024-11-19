@@ -1,7 +1,7 @@
 services:
 
-  user_service_rest:
-    container_name: usr-srv-rest
+  usr-srv-rest:
+    container_name: user_service_rest
     build:
       context: .
       dockerfile: Dockerfile.user
@@ -12,8 +12,9 @@ services:
       PORT: 9000
       API: "REST"
 
-  user_service_grpc:
-    container_name: usr-srv-grpc
+  
+  usr-srv-grpc:
+    container_name: user_service_grpc 
     build:
       context: .
       dockerfile: Dockerfile.user
@@ -23,12 +24,17 @@ services:
     environment:
       PORT: 20001
       API: "GRPC"
+      ACCESS_SECRET: "secret"
+      REFRESH_SECRET: "secret"
 
-  websocket_service:
-    container_name: ws-srv 
+  chat-srv:
+    container_name: chat_service
     build:
       context: .
       dockerfile: Dockerfile.ws
     restart: always
     ports: 
       - 2000:2000
+    environment:
+      PORT: 2000
+      AUTH_SERVICE: "usr-srv-grpc:20001"

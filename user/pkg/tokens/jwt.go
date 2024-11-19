@@ -37,7 +37,7 @@ func GenerateJWT(
 		},
 	}
 
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodRS256, c)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 
 	token, err := jwtToken.SignedString(secret)
 	if err != nil {

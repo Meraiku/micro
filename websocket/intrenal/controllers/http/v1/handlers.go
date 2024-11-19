@@ -2,12 +2,10 @@ package v1
 
 import (
 	"embed"
-	"log"
 	"net/http"
 
+	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/pkg/auth_v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 //go:embed templates/*.html
@@ -24,30 +22,84 @@ func (s *ChatServiceAPI) handleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ChatServiceAPI) handleLoginUser(w http.ResponseWriter, r *http.Request) {
+	log := logging.L(r.Context())
 
-	http.Redirect(w, r, "/chat", http.StatusSeeOther)
+	username := r.FormValue("login-username")
+	password := r.FormValue("login-password")
+
+	log.Info(
+		"logging in user",
+		logging.String("username", username),
+	)
+
+	tokens, err := s.authSerivce.Login(r.Context(), &auth_v1.LoginRequest{
+		Username: username,
+		Password: password,
+	})
+	if err != nil {
+		log.Error(
+			"failed to login user",
+			logging.Err(err),
+		)
+		return
+	}
+
+	log.Info(
+		"user logged in",
+		logging.String("username", username),
+	)
+
+	log.Debug(
+		"setting cookies",
+	)
+
+	r.AddCookie(&http.Cookie{
+		Name:  "access",
+		Value: tokens.AccessToken,
+	})
+
+	r.AddCookie(&http.Cookie{
+		Name:  "refresh",
+		Value: tokens.RefreshToken,
+	})
+
+	log.Debug(
+		"redirecting to global chat",
+		logging.String("username", username),
+	)
+
+	http.Redirect(w, r, "/global", http.StatusSeeOther)
 }
 
 func (s *ChatServiceAPI) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 
-	conn, err := grpc.NewClient("user_service_grpc:20001", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Printf("failed to create grpc client: %v", err)
-		return
-	}
+	log := logging.L(r.Context())
 
-	client := auth_v1.NewAuthV1Client(conn)
-
-	resp, err := client.Register(r.Context(), &auth_v1.RegisterRequest{
+	log.Info(
+		"registering user",
+		logging.String("username", r.FormValue("register-username")),
+	)
+	resp, err := s.authSerivce.Register(r.Context(), &auth_v1.RegisterRequest{
 		Username: r.FormValue("register-username"),
 		Password: r.FormValue("register-password"),
 	})
 	if err != nil {
-		log.Printf("failed to register user: %v", err)
+		log.Error(
+			"failed to register user",
+			logging.Err(err),
+		)
 		return
 	}
 
-	log.Printf("user registered: %v", resp)
+	log.Info(
+		"user registered",
+		logging.String("user_id", resp.Id),
+		logging.String("username", resp.Username),
+	)
+
+	log.Debug(
+		"redirecting to login page",
+	)
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

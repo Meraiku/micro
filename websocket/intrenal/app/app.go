@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"net"
+	"os"
 
 	v1 "github.com/meraiku/micro/websocket/intrenal/controllers/http/v1"
 )
@@ -14,7 +16,13 @@ func New(ctx context.Context) *App {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	chatService := v1.NewChatServiceAPI(ctx, ":2000")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "2000"
+	}
+	host := os.Getenv("HOST")
+
+	chatService := v1.NewChatServiceAPI(ctx, net.JoinHostPort(host, port))
 
 	return chatService.Run(ctx)
 }

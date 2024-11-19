@@ -33,6 +33,19 @@ func (r *Repository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, e
 	return user, nil
 }
 
+func (r *Repository) GetByUsername(ctx context.Context, username string) (*models.User, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, user := range r.store {
+		if user.Name == username {
+			return user, nil
+		}
+	}
+
+	return nil, user_repo.ErrUserNotFound
+}
+
 func (r *Repository) List(ctx context.Context) ([]*models.User, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

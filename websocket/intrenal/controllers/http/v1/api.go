@@ -5,16 +5,22 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/meraiku/micro/pkg/logging"
+	"github.com/meraiku/micro/user/pkg/auth_v1"
 	"github.com/meraiku/micro/websocket/intrenal/repo/chatRepo/memory"
 	"github.com/meraiku/micro/websocket/intrenal/services/chat"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type ChatServiceAPI struct {
-	cs   *chat.Service
-	addr string
-	tmpl *template.Template
+	cs          *chat.Service
+	addr        string
+	authAddr    string
+	authSerivce auth_v1.AuthV1Client
+	tmpl        *template.Template
 }
 
 func NewChatServiceAPI(ctx context.Context, addr string) *ChatServiceAPI {
@@ -26,10 +32,24 @@ func NewChatServiceAPI(ctx context.Context, addr string) *ChatServiceAPI {
 	repo := memory.NewRepository()
 	cs := chat.NewService(ctx, repo)
 
+	authAddr := os.Getenv("AUTH_SERVICE")
+	if authAddr == "" {
+		authAddr = "http://localhost:20001"
+	}
+
+	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Printf("failed to create grpc client: %v", err)
+	}
+
+	authSerivce := auth_v1.NewAuthV1Client(conn)
+
 	return &ChatServiceAPI{
-		addr: addr,
-		tmpl: tmpl,
-		cs:   cs,
+		addr:        addr,
+		tmpl:        tmpl,
+		authAddr:    authAddr,
+		authSerivce: authSerivce,
+		cs:          cs,
 	}
 }
 
