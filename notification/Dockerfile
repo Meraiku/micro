@@ -7,16 +7,13 @@ RUN apk add --no-cache make
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY ./user/ ./user/
-COPY ./pkg/ ./pkg/
-COPY ./Makefile ./
-RUN make build_user
+COPY . .
+RUN make build
 
 
 
 FROM alpine AS runner
 
-COPY --from=builder /usr/src/app/user/.bin/app /bin/app
+COPY --from=builder /usr/src/app/.bin/app /bin/app
 
 CMD ["/bin/app"]
-

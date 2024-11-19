@@ -48,7 +48,7 @@ func NewRoom(roomType RoomType, msgRepo MessageRepository) *Room {
 		ID:        uuid.New(),
 		Type:      roomType,
 		Users:     map[*Client]bool{},
-		Broadcast: make(chan *Message),
+		Broadcast: make(chan *Message, 100),
 		Manager: &RoomManger{
 			Add:    make(chan *Client),
 			Logout: make(chan *Client),

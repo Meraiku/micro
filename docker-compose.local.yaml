@@ -38,3 +38,14 @@ services:
     environment:
       PORT: 2000
       AUTH_SERVICE: "usr-srv-grpc:20001"
+
+  notif-srv:
+    container_name: notif_service
+    build:
+      context: .
+      dockerfile: Dockerfile.notif
+    ports: 
+      - 3000:3000
+    environment:
+      PORT: 3000
+      AUTH_SERVICE: "usr-srv-grpc:20001"

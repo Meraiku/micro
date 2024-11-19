@@ -7,7 +7,10 @@ RUN apk add --no-cache make
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY . .
+COPY ./websocket/ ./websocket
+COPY ./pkg/ ./pkg
+COPY ./user/pkg/ ./user/pkg
+COPY ./Makefile ./
 RUN make build_ws
 
 
