@@ -13,7 +13,7 @@ func (s *ChatServiceAPI) setupRoutes() *chi.Mux {
 
 	r.Route("/chat", func(r chi.Router) {
 		r.Get("/", s.handleGetChat)
-		r.Get("/ws", s.handleWebsocket)
+		r.Get("/global", s.handleGlobalChat)
 	})
 
 	return r
