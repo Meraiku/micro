@@ -17,7 +17,10 @@ func NewAuthGRPC() (*AuthContainerGRPC, error) {
 		return nil, err
 	}
 
-	authService := auth.New(repos.user, repos.token)
+	authService, err := auth.New(repos.user, repos.token)
+	if err != nil {
+		return nil, err
+	}
 
 	api := grpc_v1.NewAuthService(authService)
 

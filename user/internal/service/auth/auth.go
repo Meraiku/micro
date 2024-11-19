@@ -10,10 +10,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/internal/models"
+	"github.com/meraiku/micro/user/pkg/kafka/producer"
 	"github.com/meraiku/micro/user/pkg/tokens"
 )
 
 var (
+	brokers = []string{"kafka-1:9092", "kafka-2:9092", "kafka-3:9092"}
+
 	accessSecret  = os.Getenv("ACCESS_SECRET")
 	refreshSecret = os.Getenv("REFRESH_SECRET")
 
@@ -41,6 +44,7 @@ type TokenRepository interface {
 type Service struct {
 	userRepo  UserRepository
 	tokenRepo TokenRepository
+	notify    *producer.Producer
 
 	accessTTL  time.Duration
 	refreshTTL time.Duration
@@ -52,15 +56,24 @@ type Service struct {
 func New(
 	userRepo UserRepository,
 	tokenRepo TokenRepository,
-) *Service {
+) (*Service, error) {
+
+	notifier, err := producer.New(brokers, "user")
+	if err != nil {
+		return nil, err
+	}
+
+	notifier.Run()
+
 	return &Service{
 		userRepo:      userRepo,
 		tokenRepo:     tokenRepo,
+		notify:        notifier,
 		accessTTL:     accessTTL,
 		refreshTTL:    refreshTTL,
 		accessSecret:  []byte(accessSecret),
 		refreshSecret: []byte(refreshSecret),
-	}
+	}, nil
 }
 
 func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens, error) {
@@ -89,6 +102,8 @@ func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens,
 		return nil, fmt.Errorf("failed to stash tokens: %w", err)
 	}
 
+	go s.notify.Send(u.ID.String(), fmt.Sprintf("%s logged in", u.Name))
+
 	return tokens, nil
 }
 
@@ -102,6 +117,8 @@ func (s *Service) Register(ctx context.Context, user *models.User) (*models.User
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+
+	go s.notify.Send(u.ID.String(), fmt.Sprintf("%s registered", u.Name))
 
 	return u, nil
 }
@@ -148,6 +165,8 @@ func (s *Service) Authenticate(ctx context.Context, accessToken string) error {
 	if repoTokens.AccessToken != accessToken {
 		return ErrInvalidTokens
 	}
+
+	go s.notify.Send(userID, fmt.Sprintf("%s authenticated", userID))
 
 	return nil
 }
@@ -209,6 +228,8 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*models.Tok
 	if err := s.tokenRepo.StashTokens(ctx, userID, tokens); err != nil {
 		return nil, fmt.Errorf("failed to stash tokens: %w", err)
 	}
+
+	go s.notify.Send(userID, fmt.Sprintf("%s refreshed tokens", userID))
 
 	return tokens, nil
 }
