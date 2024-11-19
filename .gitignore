@@ -1,2 +1,5 @@
 ./websocket/.bin/
 ./user/.bin/
+./notification/.bin/
+
+kafka_data/
