@@ -44,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.notif
+    restart: always
     ports: 
       - 4200:4200
     environment:
@@ -153,7 +154,7 @@ services:
       - elasticsearch
     environment:
       LOGSTASH_PORT: 5000
-      LOGSTASH_INDEX: "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+      LOGSTASH_INDEX: "%{+YYYY.MM.dd}"
       ELASTIC_HOST: "elasticsearch:9200"
       ELASTIC_USERNAME: "elastic"
       ELASTIC_PASSWORD: "elastic"

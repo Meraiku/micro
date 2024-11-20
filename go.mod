@@ -33,6 +33,8 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
+	github.com/samber/lo v1.47.0 // indirect
+	github.com/samber/slog-multi v1.2.4 // indirect
 )
 
 require (

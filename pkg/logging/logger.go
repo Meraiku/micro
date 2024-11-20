@@ -2,8 +2,12 @@ package logging
 
 import (
 	"context"
+	"log"
 	"log/slog"
+	"net"
 	"os"
+
+	slogmulti "github.com/samber/slog-multi"
 )
 
 const (
@@ -41,6 +45,14 @@ func NewLogger(opts ...LoggerOption) *Logger {
 		h = NewJSONHandler(os.Stdout, ho)
 	case false:
 		h = NewTextHandler(os.Stdout, ho)
+	}
+
+	if cfg.Logstash.Enable {
+		conn, err := net.Dial("udp", cfg.Logstash.Addr)
+		if err != nil {
+			log.Fatalf("failed to connect to logstash: %v", err)
+		}
+		h = slogmulti.Fanout(h, NewJSONHandler(conn, ho))
 	}
 
 	l := New(h)

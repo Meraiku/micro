@@ -18,6 +18,7 @@ func main() {
 	l := logging.NewLogger(
 		logging.WithLevel(logging.LevelDebug),
 		logging.WithSource(false),
+		logging.WithLogstash("logstash:5000"),
 	)
 
 	ctx = logging.ContextWithLogger(ctx, l)

@@ -50,6 +50,7 @@ func (a *App) initLogger(_ context.Context) error {
 	log := logging.NewLogger(
 		logging.WithLevel(logging.LevelDebug),
 		logging.WithSource(false),
+		logging.WithLogstash("logstash:5000"),
 	)
 
 	log.Info("logger initialized")
