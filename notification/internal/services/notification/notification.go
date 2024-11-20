@@ -2,9 +2,10 @@ package notification
 
 import (
 	"context"
-	"log"
 
 	"github.com/meraiku/micro/notification/pkg/consumer"
+	"github.com/meraiku/micro/notification/pkg/metrics"
+	"github.com/meraiku/micro/pkg/logging"
 )
 
 var (
@@ -12,10 +13,11 @@ var (
 )
 
 type Service struct {
-	recieve chan string
+	recieve chan *consumer.ConsumerMessage
+	notif   *metrics.NotifMetric
 }
 
-func New(ctx context.Context) (*Service, error) {
+func New(ctx context.Context, notif *metrics.NotifMetric) (*Service, error) {
 
 	topic := "user"
 
@@ -26,14 +28,34 @@ func New(ctx context.Context) (*Service, error) {
 
 	return &Service{
 		recieve: notifChan,
+		notif:   notif,
 	}, nil
 }
 
-func (s *Service) Read() {
+func (s *Service) Read(ctx context.Context) {
+	log := logging.L(ctx)
 	for {
 		select {
 		case msg := <-s.recieve:
-			log.Printf("got message in notification service: %v", msg)
+			log.Debug(
+				"incrementing notification counter",
+			)
+
+			go s.notif.IncrNotifications()
+
+			log.Debug(
+				"message received",
+				logging.String("key", string(msg.Key)),
+				logging.String("message", string(msg.Value)),
+			)
+
+		// Process msg
+
+		// Send somewhere
+
+		case <-ctx.Done():
+			log.Info("Stopping reading notifications...")
+			return
 		}
 	}
 }

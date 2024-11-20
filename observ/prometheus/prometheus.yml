@@ -18,4 +18,6 @@ scrape_configs:
   scheme: http
   static_configs:
   - targets:
-    - localhost:9090
+    - usr-srv-grpc:9091
+    - usr-srv-rest:9092
+    - notif-srv:9093

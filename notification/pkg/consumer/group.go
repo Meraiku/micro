@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -13,7 +12,7 @@ func NewGroup(
 	ctx context.Context,
 	brokers []string,
 	groupID, topic string,
-) (chan string, error) {
+) (chan *ConsumerMessage, error) {
 	config := sarama.NewConfig()
 
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
@@ -43,7 +42,7 @@ func subscribeGroup(
 	ctx context.Context,
 	topic string,
 	consumer sarama.ConsumerGroup,
-) (chan string, error) {
+) (chan *ConsumerMessage, error) {
 
 	handler, notifChan := NewConsumer()
 
@@ -64,11 +63,11 @@ func subscribeGroup(
 }
 
 type Consumer struct {
-	notif chan string
+	notif chan *ConsumerMessage
 }
 
-func NewConsumer() (*Consumer, chan string) {
-	notifChan := make(chan string)
+func NewConsumer() (*Consumer, chan *ConsumerMessage) {
+	notifChan := make(chan *ConsumerMessage)
 	return &Consumer{
 		notif: notifChan,
 	}, notifChan
@@ -88,11 +87,7 @@ func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim saram
 
 	for msg := range claim.Messages() {
 
-		fmt.Printf("Message claimed from topic '%s' partition %d offset %d\n",
-			msg.Topic, msg.Partition, msg.Offset)
-		fmt.Printf("Key: %s\nValue: %s\n", string(msg.Key), string(msg.Value))
-
-		c.notif <- string(msg.Value)
+		c.notif <- msg
 
 		session.MarkMessage(msg, "")
 	}

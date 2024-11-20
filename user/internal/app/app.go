@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/meraiku/micro/pkg/logging"
+	"github.com/meraiku/micro/pkg/metrics"
 	"github.com/meraiku/micro/user/internal/config"
 	"github.com/meraiku/micro/user/internal/domain/user/memory"
 	"github.com/meraiku/micro/user/internal/service/user"
@@ -15,7 +16,8 @@ type API interface {
 }
 
 type App struct {
-	api API
+	api     API
+	metrics *metrics.Metric
 }
 
 func New(ctx context.Context) (*App, error) {
@@ -31,8 +33,9 @@ func New(ctx context.Context) (*App, error) {
 func (a *App) initDeps(ctx context.Context) error {
 
 	deps := []func(ctx context.Context) error{
-		a.initLogger,
 		a.initConfig,
+		a.initLogger,
+		a.initMetrics,
 		a.initAPI,
 	}
 
@@ -55,6 +58,15 @@ func (a *App) initLogger(_ context.Context) error {
 
 	log.Info("logger initialized")
 
+	return nil
+}
+
+func (a *App) initMetrics(_ context.Context) error {
+	metricsAddr := os.Getenv("METRICS_ADDR")
+
+	m := metrics.New(metricsAddr)
+
+	a.metrics = &m
 	return nil
 }
 
@@ -88,6 +100,12 @@ func (a *App) initAPI(ctx context.Context) error {
 }
 
 func (a *App) Run(ctx context.Context) error {
+	go func() {
+		if err := a.metrics.Run(ctx); err != nil {
+			logging.L(ctx).Info("starting service without metrics", logging.Err(err))
+		}
+	}()
+
 	return a.api.Run(ctx)
 }
 

@@ -8,9 +8,11 @@ services:
     restart: always
     ports: 
       - 9000:9000
+      - 9092:9092
     environment:
       PORT: 9000
       API: "REST"
+      METRICS_ADDR: ":9092"
 
   
   usr-srv-grpc:
@@ -21,11 +23,13 @@ services:
     restart: always
     ports: 
       - 20001:20001
+      - 9091:9091
     environment:
       PORT: 20001
       API: "GRPC"
       ACCESS_SECRET: "secret"
       REFRESH_SECRET: "secret"
+      METRICS_ADDR: ":9091"
 
   chat-srv:
     container_name: chat_service
@@ -47,9 +51,14 @@ services:
     restart: always
     ports: 
       - 4200:4200
+      - 9093:9093
     environment:
       PORT: 4200
       AUTH_SERVICE: "usr-srv-grpc:20001"
+      METRICS_ADDR: ":9093"
+      KAFKA_ADDR: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+      KAFKA_TOPICS: "user"
+      KAFKA_GROUP: "notifications"
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -83,10 +92,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:9092,OUTSIDE://localhost:9095
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LOG_DIRS: /kafka/logs
-      KAFKA_BROKER_ID: 400
+      KAFKA_BROKER_ID: 300
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-    volumes:
-      - ./kafka_data/400:/kafka
 
   kafka-2:
     image: wurstmeister/kafka
@@ -102,10 +109,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-2:9092,OUTSIDE://localhost:9096
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LOG_DIRS: /kafka/logs
-      KAFKA_BROKER_ID: 401
+      KAFKA_BROKER_ID: 301
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-    volumes:
-      - ./kafka_data/401:/kafka
 
   kafka-3:
     image: wurstmeister/kafka
@@ -121,10 +126,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-3:9092,OUTSIDE://localhost:9097
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LOG_DIRS: /kafka/logs
-      KAFKA_BROKER_ID: 402
+      KAFKA_BROKER_ID: 302
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-    volumes:
-      - ./kafka_data/402:/kafka
 
   elasticsearch:
     image: elastic/elasticsearch:8.15.4
@@ -175,7 +178,7 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     ports:
-      - 9090:9090
+      - "9090:9090"
     restart: unless-stopped
     volumes:
       - ./observ/prometheus:/etc/prometheus

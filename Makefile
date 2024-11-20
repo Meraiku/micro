@@ -9,7 +9,7 @@ build_notif:
 
 
 docker:
-	@docker compose -f docker-compose.local.yaml up --build
+	@docker compose -f docker-compose.local.yaml up --build -d
 
 stop:
 	@docker compose -f docker-compose.local.yaml stop
