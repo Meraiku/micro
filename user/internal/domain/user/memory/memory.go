@@ -66,6 +66,12 @@ func (r *Repository) Create(ctx context.Context, user *models.User) (*models.Use
 		return nil, user_repo.ErrUserExists
 	}
 
+	for _, u := range r.store {
+		if u.Name == user.Name {
+			return nil, user_repo.ErrUserExists
+		}
+	}
+
 	r.store[user.ID] = user
 
 	return user, nil

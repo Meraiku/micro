@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- HTMX -->
+    <script
+      src="https://unpkg.com/htmx.org@1.9.10"
+      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+      crossorigin="anonymous"
+    ></script>
+    <!-- HTMX Websockets extension -->
+    <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Realtime Chat</title>
+  </head>
+
+  <body class="bg-gray-200">
+    <div class="flex justify-center items-center h-screen">
+      <div class="relative w-full max-w-md">
+        <div
+          class="absolute top-0 right-0 p-4"
+          id="user-info"
+          hx-get="/users"
+          hx-trigger="load"
+          hx-target="this"
+          hx-swap="innerHTML"
+        >
+          <!-- User info will be loaded here -->
+        </div>
+
+        <h1 class="text-3xl text-center p-4">Chat</h1>
+        <div
+          hx-ext="ws"
+          ws-connect="chats/global"
+          class="bg-white rounded shadow-md p-4"
+        >
+          <div class="flex flex-col-reverse bg-gray-100 p-4">
+            <ul
+              id="chat_room"
+              hx-swap="beforeend"
+              hx-swap-oob="beforeend"
+              class="overflow-y-auto h-64"
+            ></ul>
+          </div>
+
+          <form
+            id="form"
+            ws-send
+            hx-reset-on-success
+            onsubmit="scrollChatToBottom()"
+          >
+            <input
+              name="text"
+              type="text"
+              class="border-2 border-gray-300 p-2 w-full"
+              placeholder="Type your message"
+            />
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2">
+              Send
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    function scrollChatToBottom() {
+      var chatRoom = document.getElementById("chat_room");
+      chatRoom.scrollTop = chatRoom.scrollHeight;
+    }
+  </script>
+</html>

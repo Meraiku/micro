@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Info</title>
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div id="user-info" class="flex items-center gap-2">
+      <!-- User info will be loaded here -->
+      {% if logged_in_user %}
+      <span class="text-white">{{ logged_in_user }}</span>
+      <button hx-get="/logout" class="bg-red-500 text-white px-4 py-2">
+        Logout
+      </button>
+      {% else %}
+      <button hx-get="/login" class="bg-green-500 text-white px-4 py-2">
+        Login
+      </button>
+      {% endif %}
+    </div>
+  </body>
+</html>

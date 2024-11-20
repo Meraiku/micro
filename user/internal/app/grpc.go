@@ -20,7 +20,7 @@ type grpcService struct {
 
 	authContainer *containers.AuthContainerGRPC
 	userContainer *containers.UserContainerGRPC
-	cfg           *config.GRPC
+	cfg           *config.Config
 }
 
 func newGRPCService() *grpcService {
@@ -55,9 +55,9 @@ func (s *grpcService) Run(ctx context.Context) error {
 	return s.grpcServer.Serve(listner)
 }
 
-func (s *grpcService) Config() *config.GRPC {
+func (s *grpcService) Config() *config.Config {
 	if s.cfg == nil {
-		cfg, err := config.NewGRPC()
+		cfg, err := config.NewConfig(context.Background(), config.GRPC)
 		if err != nil {
 			log.Fatalf("failed to load grpc config: %v", err)
 		}
@@ -72,7 +72,7 @@ func (s *grpcService) AuthContainer() *containers.AuthContainerGRPC {
 	if s.authContainer == nil {
 		var err error
 
-		s.authContainer, err = containers.NewAuthGRPC()
+		s.authContainer, err = containers.NewAuthGRPC(s.Config())
 		if err != nil {
 			log.Fatalf("failed to create auth container: %v", err)
 		}
@@ -85,7 +85,7 @@ func (s *grpcService) UserContainer() *containers.UserContainerGRPC {
 	if s.userContainer == nil {
 		var err error
 
-		s.userContainer, err = containers.NewUserGRPC()
+		s.userContainer, err = containers.NewUserGRPC(s.Config().Repos)
 		if err != nil {
 			log.Fatalf("failed to create user container: %v", err)
 		}

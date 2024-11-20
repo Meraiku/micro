@@ -14,13 +14,15 @@ var (
 )
 
 type Claims struct {
-	ID  string `json:"id"`
-	UID string `json:"uid"`
+	ID       string `json:"id"`
+	UID      string `json:"uid"`
+	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
 func GenerateJWT(
 	id string,
+	username string,
 	ttl time.Duration,
 	secret []byte,
 ) (string, error) {
@@ -30,8 +32,9 @@ func GenerateJWT(
 	}
 
 	c := &Claims{
-		ID:  id,
-		UID: uuid.NewString(),
+		ID:       id,
+		UID:      uuid.NewString(),
+		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl).UTC()),
 		},
@@ -49,18 +52,19 @@ func GenerateJWT(
 
 func GeneratePair(
 	id string,
+	username string,
 	accessTTL time.Duration,
 	refreshTTL time.Duration,
 	accessSecret []byte,
 	refreshSecret []byte,
 ) (*models.Tokens, error) {
 
-	access, err := GenerateJWT(id, accessTTL, accessSecret)
+	access, err := GenerateJWT(id, username, accessTTL, accessSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	refresh, err := GenerateJWT(id, refreshTTL, refreshSecret)
+	refresh, err := GenerateJWT(id, username, refreshTTL, refreshSecret)
 	if err != nil {
 		return nil, err
 	}

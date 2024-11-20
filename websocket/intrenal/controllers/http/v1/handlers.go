@@ -11,28 +11,59 @@ import (
 //go:embed templates/*.html
 var templates embed.FS
 
-func (s *ChatServiceAPI) handleGetChat(w http.ResponseWriter, r *http.Request) {
+//go:embed css/*.css
+var css embed.FS
+
+func (s *ChatServiceAPI) handleRoot(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("HX-Redirect", "/")
 
 	http.ServeFileFS(w, r, templates, "templates/index.html")
 }
 
+func (s *ChatServiceAPI) handleUserInfo(w http.ResponseWriter, r *http.Request) {
+
+	http.ServeFileFS(w, r, templates, "templates/user_info.html")
+}
+
+func (s *ChatServiceAPI) handleServeCSS(w http.ResponseWriter, r *http.Request) {
+
+	http.ServeFileFS(w, r, css, "templates/css/style.css")
+}
+
+func (s *ChatServiceAPI) handleGetChat(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("HX-Redirect", "/chats")
+
+	http.ServeFileFS(w, r, templates, "templates/chat.html")
+}
+
 func (s *ChatServiceAPI) handleLogin(w http.ResponseWriter, r *http.Request) {
 
+	w.Header().Set("HX-Redirect", "/login")
+
 	http.ServeFileFS(w, r, templates, "templates/login.html")
+}
+
+func (s *ChatServiceAPI) handleRegister(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("HX-Redirect", "/register")
+
+	http.ServeFileFS(w, r, templates, "templates/register.html")
 }
 
 func (s *ChatServiceAPI) handleLoginUser(w http.ResponseWriter, r *http.Request) {
 	log := logging.L(r.Context())
 
-	username := r.FormValue("login-username")
-	password := r.FormValue("login-password")
+	username := r.FormValue("username")
+	password := r.FormValue("password")
 
 	log.Info(
 		"logging in user",
 		logging.String("username", username),
 	)
 
-	tokens, err := s.authSerivce.Login(r.Context(), &auth_v1.LoginRequest{
+	tks, err := s.authSerivce.Login(r.Context(), &auth_v1.LoginRequest{
 		Username: username,
 		Password: password,
 	})
@@ -55,12 +86,12 @@ func (s *ChatServiceAPI) handleLoginUser(w http.ResponseWriter, r *http.Request)
 
 	r.AddCookie(&http.Cookie{
 		Name:  "access",
-		Value: tokens.AccessToken,
+		Value: tks.AccessToken,
 	})
 
 	r.AddCookie(&http.Cookie{
 		Name:  "refresh",
-		Value: tokens.RefreshToken,
+		Value: tks.RefreshToken,
 	})
 
 	log.Debug(
@@ -68,20 +99,23 @@ func (s *ChatServiceAPI) handleLoginUser(w http.ResponseWriter, r *http.Request)
 		logging.String("username", username),
 	)
 
-	http.Redirect(w, r, "/global", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (s *ChatServiceAPI) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	log := logging.L(r.Context())
 
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
 	log.Info(
 		"registering user",
-		logging.String("username", r.FormValue("register-username")),
+		logging.String("username", username),
 	)
 	resp, err := s.authSerivce.Register(r.Context(), &auth_v1.RegisterRequest{
-		Username: r.FormValue("register-username"),
-		Password: r.FormValue("register-password"),
+		Username: username,
+		Password: password,
 	})
 	if err != nil {
 		log.Error(

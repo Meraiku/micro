@@ -1,9 +1,9 @@
 package containers
 
 import (
-	"os"
+	"fmt"
 
-	"github.com/meraiku/micro/pkg/logging"
+	"github.com/meraiku/micro/user/internal/config"
 	tokenRepo "github.com/meraiku/micro/user/internal/domain/token/memory"
 	userRepo "github.com/meraiku/micro/user/internal/domain/user/memory"
 	"github.com/meraiku/micro/user/internal/service/auth"
@@ -19,73 +19,49 @@ type UserServiceRepos struct {
 	user user.Repository
 }
 
-func NewAuthServiceRepos() (*AuthServiceRepos, error) {
-	var (
-		tokenRepository auth.TokenRepository
-		userRepository  auth.UserRepository
-	)
+func NewAuthServiceRepos(repos map[config.Repo]config.RepoType) (*AuthServiceRepos, error) {
+	repo := &AuthServiceRepos{}
 
-	authRepoEnv := os.Getenv("AUTH_REPO")
-	if authRepoEnv == "" {
-		authRepoEnv = "memory"
+	user, ok := repos[config.Users]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", config.ErrRepoNotFound, "users")
 	}
 
-	userRepoEnv := os.Getenv("USER_REPO")
-	if userRepoEnv == "" {
-		userRepoEnv = "memory"
+	token, ok := repos[config.Tokens]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", config.ErrRepoNotFound, "tokens")
 	}
 
-	switch authRepoEnv {
-	case "memory":
-		memoryTokenRepo := tokenRepo.New()
-		tokenRepository = memoryTokenRepo
-	}
-
-	switch userRepoEnv {
-	case "memory":
+	switch user {
+	case config.Memory:
 		memoryUserRepo := userRepo.New()
-		userRepository = memoryUserRepo
+		repo.user = memoryUserRepo
 	}
 
-	logging.Default().Info(
-		"auth service initialized",
-		logging.String("auth_repo", authRepoEnv),
-		logging.String("user_repo", userRepoEnv),
-	)
-
-	repos := &AuthServiceRepos{
-		user:  userRepository,
-		token: tokenRepository,
+	switch token {
+	case config.Memory:
+		memoryTokenRepo := tokenRepo.New()
+		repo.token = memoryTokenRepo
 	}
 
-	return repos, nil
+	return repo, nil
 
 }
 
-func NewUserServiceRepos() (*UserServiceRepos, error) {
-	var (
-		userRepository user.Repository
-	)
+func NewUserServiceRepos(repos map[config.Repo]config.RepoType) (*UserServiceRepos, error) {
 
-	userRepoEnv := os.Getenv("USER_REPO")
-	if userRepoEnv == "" {
-		userRepoEnv = "memory"
+	repo := &UserServiceRepos{}
+
+	user, ok := repos[config.Users]
+	if !ok {
+		return nil, fmt.Errorf("%w: %s", config.ErrRepoNotFound, "users")
 	}
 
-	switch userRepoEnv {
-	case "memory":
+	switch user {
+	case config.Memory:
 		memoryUserRepo := userRepo.New()
-		userRepository = memoryUserRepo
+		repo.user = memoryUserRepo
 	}
 
-	logging.Default().Info(
-		"user service initialized",
-		logging.String("user_repo", userRepoEnv),
-	)
-
-	repos := &UserServiceRepos{
-		user: userRepository,
-	}
-
-	return repos, nil
+	return repo, nil
 }

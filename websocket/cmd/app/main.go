@@ -16,7 +16,7 @@ func main() {
 	logging.NewLogger(
 		logging.WithLevel(logging.LevelDebug),
 		logging.WithSource(false),
-		logging.WithLogstash("logstash:5000"),
+		//		logging.WithLogstash("logstash:5000"),
 	)
 
 	app := app.New(ctx)

@@ -3,18 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
-    <link rel="stylesheet" href="/css/styles.css" />
+    <title>Register</title>
+    <link rel="stylesheet" href="css/styles.css" />
     <script src="https://unpkg.com/htmx.org@1.7.0"></script>
   </head>
   <body class="login-body">
     <div class="login-container">
-      <h2>Login</h2>
+      <h2>Register</h2>
       <form
-        id="login-form"
-        hx-post="/login"
+        id="register-form"
+        hx-post="/register"
         hx-target="#main-content"
         hx-swap="innerHTML"
+        hx-push-url="/login"
       >
         <div class="form-group">
           <label for="username">Username</label>
@@ -24,16 +25,16 @@
           <label for="password">Password</label>
           <input type="password" id="password" name="password" required />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit">Register</button>
       </form>
       <button
-        id="register-button"
-        hx-get="/register"
+        id="back-to-login-button"
+        hx-get="/login"
         hx-target="#main-content"
         hx-swap="innerHTML"
-        hx-push-url="/register"
+        hx-push-url="/login"
       >
-        Register
+        Back to Login
       </button>
     </div>
     <div id="main-content" class="main-content">

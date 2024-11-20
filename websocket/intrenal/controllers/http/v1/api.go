@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -20,14 +19,9 @@ type ChatServiceAPI struct {
 	addr        string
 	authAddr    string
 	authSerivce auth_v1.AuthV1Client
-	tmpl        *template.Template
 }
 
 func NewChatServiceAPI(ctx context.Context, addr string) *ChatServiceAPI {
-	tmpl, err := template.New("").ParseFS(templates, "templates/index.html")
-	if err != nil {
-		log.Fatalf("failed to create template: %v", err)
-	}
 
 	repo := memory.NewRepository()
 	cs := chat.NewService(ctx, repo)
@@ -46,7 +40,6 @@ func NewChatServiceAPI(ctx context.Context, addr string) *ChatServiceAPI {
 
 	return &ChatServiceAPI{
 		addr:        addr,
-		tmpl:        tmpl,
 		authAddr:    authAddr,
 		authSerivce: authSerivce,
 		cs:          cs,

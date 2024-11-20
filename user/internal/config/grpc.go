@@ -5,14 +5,13 @@ import (
 	"os"
 )
 
-type GRPC struct {
-	port         string
-	host         string
-	userRepoType string
+type cfgGRPC struct {
+	port string
+	host string
 }
 
-func NewGRPC() (*GRPC, error) {
-	cfg := &GRPC{}
+func NewGRPC() (cfgGRPC, error) {
+	cfg := cfgGRPC{}
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -21,22 +20,12 @@ func NewGRPC() (*GRPC, error) {
 
 	host := os.Getenv("HOST")
 
-	userRepo := os.Getenv("USER_REPO")
-	if userRepo == "" {
-		userRepo = "memory"
-	}
-
 	cfg.port = port
 	cfg.host = host
-	cfg.userRepoType = userRepo
 
 	return cfg, nil
 }
 
-func (c *GRPC) Address() string {
+func (c cfgGRPC) Address() string {
 	return net.JoinHostPort(c.host, c.port)
-}
-
-func (c *GRPC) UserRepoType() string {
-	return c.userRepoType
 }

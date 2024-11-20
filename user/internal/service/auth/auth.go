@@ -4,24 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/meraiku/micro/pkg/logging"
+	"github.com/meraiku/micro/user/internal/config"
 	"github.com/meraiku/micro/user/internal/models"
 	"github.com/meraiku/micro/user/pkg/kafka/producer"
 	"github.com/meraiku/micro/user/pkg/tokens"
-)
-
-var (
-	brokers = []string{"kafka-1:9092", "kafka-2:9092", "kafka-3:9092"}
-
-	accessSecret  = os.Getenv("ACCESS_SECRET")
-	refreshSecret = os.Getenv("REFRESH_SECRET")
-
-	accessTTL  = 24 * time.Hour
-	refreshTTL = 7 * 24 * time.Hour
 )
 
 var (
@@ -54,11 +44,12 @@ type Service struct {
 }
 
 func New(
+	cfg *config.Config,
 	userRepo UserRepository,
 	tokenRepo TokenRepository,
 ) (*Service, error) {
 
-	notifier, err := producer.New(brokers, "user")
+	notifier, err := producer.New(cfg.Brokers, cfg.Topic)
 	if err != nil {
 		return nil, err
 	}
@@ -69,10 +60,10 @@ func New(
 		userRepo:      userRepo,
 		tokenRepo:     tokenRepo,
 		notify:        notifier,
-		accessTTL:     accessTTL,
-		refreshTTL:    refreshTTL,
-		accessSecret:  []byte(accessSecret),
-		refreshSecret: []byte(refreshSecret),
+		accessTTL:     cfg.TTL.AccessTTL,
+		refreshTTL:    cfg.TTL.RefreshTTL,
+		accessSecret:  []byte(cfg.Secrets.AccessSecret),
+		refreshSecret: []byte(cfg.Secrets.RefreshSecret),
 	}, nil
 }
 
@@ -89,6 +80,7 @@ func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens,
 
 	tokens, err := tokens.GeneratePair(
 		u.ID.String(),
+		u.Name,
 		s.accessTTL,
 		s.refreshTTL,
 		s.accessSecret,
@@ -212,6 +204,7 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*models.Tok
 
 	tokens, err := tokens.GeneratePair(
 		userID,
+		claims.Username,
 		s.accessTTL,
 		s.refreshTTL,
 		s.accessSecret,
