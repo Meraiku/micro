@@ -58,6 +58,11 @@ func NewRoom(roomType RoomType, msgRepo MessageRepository) *Room {
 }
 
 func (r *Room) Run(ctx context.Context) {
+	logging.WithAttrs(
+		ctx,
+		logging.String("room_id", r.ID.String()),
+	)
+
 	log := logging.L(ctx)
 
 	for {
@@ -76,7 +81,6 @@ func (r *Room) Run(ctx context.Context) {
 					log.Debug(
 						"sending message",
 						logging.String("client_id", c.ID.String()),
-						logging.String("room_id", r.ID.String()),
 						logging.Any("message", msg),
 					)
 					c.recieve <- msg.Render()
@@ -86,7 +90,6 @@ func (r *Room) Run(ctx context.Context) {
 				log.Info(
 					"client left room",
 					logging.String("client_id", c.ID.String()),
-					logging.String("room_id", r.ID.String()),
 				)
 
 				delete(r.Users, c)

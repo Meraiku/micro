@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/meraiku/micro/notification/internal/app"
@@ -15,10 +16,16 @@ func main() {
 
 	godotenv.Load()
 
+	var enable bool
+	logAddr := os.Getenv("LOGSTASH_ADDR")
+	if logAddr == "" {
+		enable = false
+	}
+
 	l := logging.NewLogger(
 		logging.WithLevel(logging.LevelDebug),
 		logging.WithSource(false),
-		logging.WithLogstash("logstash:5000"),
+		logging.WithLogstash(enable, logAddr),
 	)
 
 	ctx = logging.ContextWithLogger(ctx, l)

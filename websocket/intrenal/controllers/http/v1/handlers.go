@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/meraiku/micro/pkg/logging"
-	"github.com/meraiku/micro/user/pkg/auth_v1"
+	"github.com/meraiku/micro/websocket/intrenal/models"
 )
 
 //go:embed templates/*.html
@@ -63,10 +63,12 @@ func (s *ChatServiceAPI) handleLoginUser(w http.ResponseWriter, r *http.Request)
 		logging.String("username", username),
 	)
 
-	tks, err := s.authSerivce.Login(r.Context(), &auth_v1.LoginRequest{
-		Username: username,
+	user := &models.User{
+		Name:     username,
 		Password: password,
-	})
+	}
+
+	tks, err := s.authService.Login(r.Context(), user)
 	if err != nil {
 		log.Error(
 			"failed to login user",
@@ -84,20 +86,16 @@ func (s *ChatServiceAPI) handleLoginUser(w http.ResponseWriter, r *http.Request)
 		"setting cookies",
 	)
 
-	r.AddCookie(&http.Cookie{
+	http.SetCookie(w, &http.Cookie{
+
 		Name:  "access",
 		Value: tks.AccessToken,
 	})
 
-	r.AddCookie(&http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:  "refresh",
 		Value: tks.RefreshToken,
 	})
-
-	log.Debug(
-		"redirecting to global chat",
-		logging.String("username", username),
-	)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -113,10 +111,13 @@ func (s *ChatServiceAPI) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 		"registering user",
 		logging.String("username", username),
 	)
-	resp, err := s.authSerivce.Register(r.Context(), &auth_v1.RegisterRequest{
-		Username: username,
+
+	user := &models.User{
+		Name:     username,
 		Password: password,
-	})
+	}
+
+	resp, err := s.authService.Register(r.Context(), user)
 	if err != nil {
 		log.Error(
 			"failed to register user",
@@ -127,8 +128,8 @@ func (s *ChatServiceAPI) handleRegisterUser(w http.ResponseWriter, r *http.Reque
 
 	log.Info(
 		"user registered",
-		logging.String("user_id", resp.Id),
-		logging.String("username", resp.Username),
+		logging.String("user_id", resp.ID.String()),
+		logging.String("username", resp.Name),
 	)
 
 	log.Debug(

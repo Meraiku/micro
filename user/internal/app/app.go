@@ -50,10 +50,17 @@ func (a *App) initDeps(ctx context.Context) error {
 
 func (a *App) initLogger(_ context.Context) error {
 
+	var enabled bool
+
+	logAddr := os.Getenv("LOGSTASH_ADDR")
+	if logAddr == "" {
+		enabled = false
+	}
+
 	log := logging.NewLogger(
 		logging.WithLevel(logging.LevelDebug),
 		logging.WithSource(false),
-		logging.WithLogstash("logstash:5000"),
+		logging.WithLogstash(enabled, logAddr),
 	)
 
 	log.Info("logger initialized")

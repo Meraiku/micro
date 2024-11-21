@@ -2,47 +2,42 @@ package v1
 
 import (
 	"context"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/meraiku/micro/pkg/logging"
-	"github.com/meraiku/micro/user/pkg/auth_v1"
-	"github.com/meraiku/micro/websocket/intrenal/repo/chatRepo/memory"
+	"github.com/meraiku/micro/websocket/intrenal/models"
 	"github.com/meraiku/micro/websocket/intrenal/services/chat"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
-type ChatServiceAPI struct {
-	cs          *chat.Service
-	addr        string
-	authAddr    string
-	authSerivce auth_v1.AuthV1Client
+type AuthService interface {
+	Login(ctx context.Context, user *models.User) (*models.Tokens, error)
+	Register(ctx context.Context, user *models.User) (*models.User, error)
+	Authenticate(ctx context.Context, accessToken string) (*models.User, error)
+	Refresh(ctx context.Context, refreshToken string) (*models.Tokens, error)
 }
 
-func NewChatServiceAPI(ctx context.Context, addr string) *ChatServiceAPI {
+type ChatService interface {
+	ConnectGlobal(client *chat.Client, w http.ResponseWriter, r *http.Request) error
+}
 
-	repo := memory.NewRepository()
-	cs := chat.NewService(ctx, repo)
+type ChatServiceAPI struct {
+	cs          ChatService
+	authService AuthService
 
-	authAddr := os.Getenv("AUTH_SERVICE")
-	if authAddr == "" {
-		authAddr = "http://localhost:20001"
-	}
+	addr string
+}
 
-	conn, err := grpc.NewClient(authAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Printf("failed to create grpc client: %v", err)
-	}
-
-	authSerivce := auth_v1.NewAuthV1Client(conn)
+func NewChatServiceAPI(
+	ctx context.Context,
+	addr string,
+	chatService ChatService,
+	authService AuthService,
+) *ChatServiceAPI {
 
 	return &ChatServiceAPI{
 		addr:        addr,
-		authAddr:    authAddr,
-		authSerivce: authSerivce,
-		cs:          cs,
+		authService: authService,
+		cs:          chatService,
 	}
 }
 

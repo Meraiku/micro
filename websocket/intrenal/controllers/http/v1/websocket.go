@@ -10,7 +10,12 @@ import (
 func (s *ChatServiceAPI) handleGlobalChat(w http.ResponseWriter, r *http.Request) {
 	log := logging.L(r.Context())
 
-	client := chat.NewClient("guest")
+	username, err := r.Cookie("username")
+	if err != nil {
+		username.Value = "guest"
+	}
+
+	client := chat.NewClient(username.Value)
 
 	log.Info(
 		"connecting to global chat",

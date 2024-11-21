@@ -109,10 +109,10 @@ func WithSetDefault(setDefault bool) LoggerOption {
 	}
 }
 
-func WithLogstash(logstashAddress string) LoggerOption {
+func WithLogstash(enable bool, logstashAddress string) LoggerOption {
 	return func(o *LoggerOptions) {
 		logstash := Logstash{
-			Enable: true,
+			Enable: enable,
 			Addr:   logstashAddress,
 		}
 		o.Logstash = logstash

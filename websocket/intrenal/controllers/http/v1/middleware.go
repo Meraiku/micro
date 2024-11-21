@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/meraiku/micro/pkg/logging"
-	"github.com/meraiku/micro/user/pkg/auth_v1"
 )
 
 func (s *ChatServiceAPI) authMiddleware(next http.Handler) http.Handler {
@@ -33,17 +32,18 @@ func (s *ChatServiceAPI) authMiddleware(next http.Handler) http.Handler {
 
 			log.Debug("refreshing tokens")
 
-			tokens, err := s.authSerivce.Refresh(r.Context(), &auth_v1.RefreshRequest{RefreshToken: refresh.Value})
+			tokens, err := s.authService.Refresh(r.Context(), refresh.Value)
 			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 
-			r.AddCookie(&http.Cookie{
+			http.SetCookie(w, &http.Cookie{
 				Name:  "access",
 				Value: tokens.AccessToken,
 			})
-			r.AddCookie(&http.Cookie{
+
+			http.SetCookie(w, &http.Cookie{
 				Name:  "refresh",
 				Value: tokens.RefreshToken,
 			})
@@ -53,10 +53,16 @@ func (s *ChatServiceAPI) authMiddleware(next http.Handler) http.Handler {
 
 			log.Debug("access token found, trying authenticate")
 
-			if _, err := s.authSerivce.Authenticate(r.Context(), &auth_v1.AuthenticateRequest{AccessToken: token.Value}); err != nil {
+			user, err := s.authService.Authenticate(r.Context(), token.Value)
+			if err != nil {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+
+			r.AddCookie(&http.Cookie{
+				Name:  "username",
+				Value: user.Name,
+			})
 		}
 
 		next.ServeHTTP(w, r)

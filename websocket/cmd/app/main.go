@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/meraiku/micro/pkg/logging"
@@ -13,14 +13,32 @@ func main() {
 	ctx := context.TODO()
 	godotenv.Load(".env")
 
-	logging.NewLogger(
+	var enableLogstash bool
+
+	logAddr := os.Getenv("LOGSTASH_ADDR")
+	if logAddr != "" {
+		enableLogstash = true
+	}
+
+	l := logging.NewLogger(
 		logging.WithLevel(logging.LevelDebug),
 		logging.WithSource(false),
-		//		logging.WithLogstash("logstash:5000"),
+		logging.WithLogstash(enableLogstash, logAddr),
 	)
 
-	app := app.New(ctx)
+	app, err := app.New(ctx)
+	if err != nil {
+		l.Error(
+			"failed to create app",
+			logging.Err(err),
+		)
+		return
+	}
+
 	if err := app.Run(ctx); err != nil {
-		log.Fatalf("failed to run app: %v", err)
+		l.Error(
+			"failed to run app",
+			logging.Err(err),
+		)
 	}
 }

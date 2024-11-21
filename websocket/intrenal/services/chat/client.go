@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,7 +32,6 @@ func NewClient(username string) *Client {
 }
 
 func (c *Client) StartSession(ctx context.Context, conn *websocket.Conn) error {
-
 	defer func() {
 		c.conn.Close()
 	}()
@@ -90,7 +88,6 @@ func (c *Client) read() error {
 
 			w.Write(msg)
 
-			// Add queued chat messages to the current websocket message.
 			n := len(c.recieve)
 			for i := 0; i < n; i++ {
 				w.Write(msg)
@@ -120,10 +117,8 @@ func (c *Client) write() error {
 
 	for {
 		_, text, err := c.conn.ReadMessage()
-		log.Printf("got message: %v", string(text))
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("connection closed: %v", err)
 			}
 			break
 		}
@@ -134,7 +129,6 @@ func (c *Client) write() error {
 		decoder := json.NewDecoder(reader)
 		err = decoder.Decode(msg)
 		if err != nil {
-			log.Printf("decode msg: %v", err)
 		}
 
 		c.ChatRoom.Broadcast <- NewMessage(c, msg.Text)

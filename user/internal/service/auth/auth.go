@@ -69,14 +69,39 @@ func New(
 
 func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens, error) {
 
+	logging.WithAttrs(
+		ctx,
+		logging.String("username", user.Name),
+	)
+
+	log := logging.L(ctx)
+
+	log.Debug(
+		"get user from repo",
+	)
+
 	u, err := s.userRepo.GetByUsername(ctx, user.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	log.Debug(
+		"user from repo",
+		logging.String("user_id", u.ID.String()),
+		logging.String("username", u.Name),
+	)
+
+	log.Debug(
+		"validate password",
+	)
+
 	if err := u.ValidatePassword(user.Password); err != nil {
 		return nil, ErrIncorrectPassword
 	}
+
+	log.Debug(
+		"generate tokens",
+	)
 
 	tokens, err := tokens.GeneratePair(
 		u.ID.String(),
@@ -90,9 +115,17 @@ func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens,
 		return nil, fmt.Errorf("failed to generate tokens: %w", err)
 	}
 
-	if err := s.tokenRepo.StashTokens(ctx, user.ID.String(), tokens); err != nil {
+	log.Debug(
+		"stash tokens",
+	)
+
+	if err := s.tokenRepo.StashTokens(ctx, u.ID.String(), tokens); err != nil {
 		return nil, fmt.Errorf("failed to stash tokens: %w", err)
 	}
+
+	log.Debug(
+		"send notification",
+	)
 
 	go s.notify.Send(u.ID.String(), fmt.Sprintf("%s logged in", u.Name))
 
@@ -101,14 +134,33 @@ func (s *Service) Login(ctx context.Context, user *models.User) (*models.Tokens,
 
 func (s *Service) Register(ctx context.Context, user *models.User) (*models.User, error) {
 
+	logging.WithAttrs(
+		ctx,
+		logging.String("username", user.Name),
+	)
+
+	log := logging.L(ctx)
+
+	log.Debug(
+		"creating user hash password",
+	)
+
 	if err := user.HashPassword(); err != nil {
 		return nil, err
 	}
+
+	log.Debug(
+		"create user in repo",
+	)
 
 	u, err := s.userRepo.Create(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+
+	log.Debug(
+		"send notification",
+	)
 
 	go s.notify.Send(u.ID.String(), fmt.Sprintf("%s registered", u.Name))
 
