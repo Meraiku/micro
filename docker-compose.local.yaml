@@ -45,9 +45,11 @@ services:
     restart: always
     ports: 
       - 2000:2000
+      - 9094:9094
     environment:
       PORT: 2000
       AUTH_SERVICE: "usr-srv-grpc:20001"
+      METRICS_ADDR: ":9094"
 
   notif-srv:
     container_name: notif_service

@@ -21,3 +21,4 @@ scrape_configs:
     - usr-srv-grpc:9091
     - usr-srv-rest:9092
     - notif-srv:9093
+    - chat-srv:9094

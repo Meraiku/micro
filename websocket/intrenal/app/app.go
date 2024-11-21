@@ -2,7 +2,10 @@ package app
 
 import (
 	"context"
+	"os"
 
+	"github.com/meraiku/micro/pkg/logging"
+	"github.com/meraiku/micro/pkg/metrics"
 	"github.com/meraiku/micro/websocket/intrenal/config"
 	v1 "github.com/meraiku/micro/websocket/intrenal/controllers/http/v1"
 	"github.com/meraiku/micro/websocket/intrenal/repo/chatRepo/memory"
@@ -12,6 +15,7 @@ import (
 
 type App struct {
 	cfg         config.Config
+	metrics     *metrics.Metric
 	chatService v1.ChatService
 	authService v1.AuthService
 }
@@ -32,6 +36,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initConfig,
 		a.initChatService,
 		a.initAuthService,
+		a.initMetrics,
 	}
 
 	for _, dep := range deps {
@@ -72,6 +77,22 @@ func (a *App) initAuthService(ctx context.Context) error {
 	}
 
 	a.authService = au
+
+	return nil
+}
+
+func (a *App) initMetrics(ctx context.Context) error {
+	metricsAddr := os.Getenv("METRICS_ADDR")
+
+	m := metrics.New(metricsAddr)
+
+	a.metrics = &m
+
+	go func() {
+		if err := a.metrics.Run(ctx); err != nil {
+			logging.L(ctx).Info("starting service without metrics", logging.Err(err))
+		}
+	}()
 
 	return nil
 }
