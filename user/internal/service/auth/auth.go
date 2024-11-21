@@ -119,7 +119,7 @@ func (s *Service) GetTokens(ctx context.Context, user *models.User) (*models.Tok
 	return nil, nil
 }
 
-func (s *Service) Authenticate(ctx context.Context, accessToken string) error {
+func (s *Service) Authenticate(ctx context.Context, accessToken string) (*models.User, error) {
 	log := logging.L(ctx)
 
 	log.Debug(
@@ -129,7 +129,7 @@ func (s *Service) Authenticate(ctx context.Context, accessToken string) error {
 
 	claims, err := tokens.ParseJWT(accessToken, s.accessSecret)
 	if err != nil {
-		return fmt.Errorf("failed to parse access token: %w", err)
+		return nil, fmt.Errorf("failed to parse access token: %w", err)
 	}
 
 	userID := claims.ID
@@ -141,7 +141,7 @@ func (s *Service) Authenticate(ctx context.Context, accessToken string) error {
 
 	repoTokens, err := s.tokenRepo.GetTokens(ctx, userID)
 	if err != nil {
-		return ErrNoTokens
+		return nil, ErrNoTokens
 	}
 
 	log.Debug(
@@ -155,12 +155,17 @@ func (s *Service) Authenticate(ctx context.Context, accessToken string) error {
 	)
 
 	if repoTokens.AccessToken != accessToken {
-		return ErrInvalidTokens
+		return nil, ErrInvalidTokens
+	}
+
+	user := &models.User{
+		ID:   uuid.MustParse(userID),
+		Name: claims.Username,
 	}
 
 	go s.notify.Send(userID, fmt.Sprintf("%s authenticated", userID))
 
-	return nil
+	return user, nil
 }
 
 func (s *Service) Refresh(ctx context.Context, refreshToken string) (*models.Tokens, error) {

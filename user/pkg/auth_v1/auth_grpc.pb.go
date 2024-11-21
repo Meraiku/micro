@@ -8,7 +8,6 @@ package auth_v1
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,7 +31,7 @@ const (
 type AuthV1Client interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*Tokens, error)
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*User, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*Tokens, error)
 }
 
@@ -64,9 +63,9 @@ func (c *authV1Client) Register(ctx context.Context, in *RegisterRequest, opts .
 	return out, nil
 }
 
-func (c *authV1Client) Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *authV1Client) Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(empty.Empty)
+	out := new(User)
 	err := c.cc.Invoke(ctx, AuthV1_Authenticate_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -90,7 +89,7 @@ func (c *authV1Client) Refresh(ctx context.Context, in *RefreshRequest, opts ...
 type AuthV1Server interface {
 	Login(context.Context, *LoginRequest) (*Tokens, error)
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	Authenticate(context.Context, *AuthenticateRequest) (*empty.Empty, error)
+	Authenticate(context.Context, *AuthenticateRequest) (*User, error)
 	Refresh(context.Context, *RefreshRequest) (*Tokens, error)
 	mustEmbedUnimplementedAuthV1Server()
 }
@@ -108,7 +107,7 @@ func (UnimplementedAuthV1Server) Login(context.Context, *LoginRequest) (*Tokens,
 func (UnimplementedAuthV1Server) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
-func (UnimplementedAuthV1Server) Authenticate(context.Context, *AuthenticateRequest) (*empty.Empty, error) {
+func (UnimplementedAuthV1Server) Authenticate(context.Context, *AuthenticateRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
 }
 func (UnimplementedAuthV1Server) Refresh(context.Context, *RefreshRequest) (*Tokens, error) {

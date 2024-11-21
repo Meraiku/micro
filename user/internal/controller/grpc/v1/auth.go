@@ -6,13 +6,12 @@ import (
 	"github.com/meraiku/micro/pkg/logging"
 	"github.com/meraiku/micro/user/internal/models"
 	"github.com/meraiku/micro/user/pkg/auth_v1"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type AuthService interface {
 	Login(ctx context.Context, user *models.User) (*models.Tokens, error)
 	Register(ctx context.Context, user *models.User) (*models.User, error)
-	Authenticate(ctx context.Context, accessToken string) error
+	Authenticate(ctx context.Context, accessToken string) (*models.User, error)
 	Refresh(ctx context.Context, refreshToken string) (*models.Tokens, error)
 }
 
@@ -86,16 +85,21 @@ func (s *GRPCAuthService) Register(ctx context.Context, req *auth_v1.RegisterReq
 	return out, nil
 }
 
-func (s *GRPCAuthService) Authenticate(ctx context.Context, req *auth_v1.AuthenticateRequest) (*emptypb.Empty, error) {
+func (s *GRPCAuthService) Authenticate(ctx context.Context, req *auth_v1.AuthenticateRequest) (*auth_v1.User, error) {
 
 	accessToken := req.AccessToken
 
-	err := s.authService.Authenticate(ctx, accessToken)
+	user, err := s.authService.Authenticate(ctx, accessToken)
 	if err != nil {
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, nil
+	out := &auth_v1.User{
+		Id:       user.ID.String(),
+		Username: user.Name,
+	}
+
+	return out, nil
 }
 
 func (s *GRPCAuthService) Refresh(ctx context.Context, req *auth_v1.RefreshRequest) (*auth_v1.Tokens, error) {
